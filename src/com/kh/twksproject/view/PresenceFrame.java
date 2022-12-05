@@ -1,13 +1,11 @@
 package com.kh.twksproject.view;
 
+import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Objects;
-
-import javax.swing.*;
-import javax.swing.border.Border;
 
 public class PresenceFrame implements ActionListener {
 
@@ -27,24 +25,44 @@ public class PresenceFrame implements ActionListener {
     private SystemTray tray = null;
 
     SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm:ss");
-    Date presenceTime = null;
+    Date presenceTime = new Date();
     Date restTime = null;
     Date leavingTime = null;
 
+    long workHours=0;
+    long workMinutes=0;
+
     public PresenceFrame() {
         presenceFrame.setSize(WIDTH, HEIGHT);
-
         presenceFrame.setLocationRelativeTo(null);
         presenceFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        timeLabel.setText("出勤時刻　"+formatTime.format(presenceTime));
         init();
+        trayAction();
+        presenceFrame.setVisible(true);
+    }
+
+    public PresenceFrame(long workHours,long workMinutes){
+        this.workHours = workHours;
+        this.workMinutes = workMinutes;
+        presenceFrame.setSize(WIDTH, HEIGHT);
+        presenceFrame.setLocationRelativeTo(null);
+        presenceFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        timeLabel.setText("　");
+        init();
+        trayAction();
+        presenceFrame.setVisible(true);
+    }
+
+    void trayAction(){
         presenceFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                    try {
-                        tray.add(trayIcon);
-                    } catch (AWTException e1) {
-                        e1.printStackTrace();
-                    }
+                try {
+                    tray.add(trayIcon);
+                } catch (AWTException e1) {
+                    e1.printStackTrace();
+                }
                 //presenceFrame.setVisible(false);
             }
 
@@ -58,7 +76,6 @@ public class PresenceFrame implements ActionListener {
                 }
             }
         });
-        presenceFrame.setVisible(true);
         if (SystemTray.isSupported()) {
             this.tray();
         }
@@ -74,8 +91,7 @@ public class PresenceFrame implements ActionListener {
         stateBox.add(stateLabel);
 
         Box timeBox = Box.createHorizontalBox();
-        presenceTime = new Date();
-        timeLabel.setText("出勤時刻　"+formatTime.format(presenceTime));
+
         timeBox.add(timeLabel);
         
         Box welcomeBox = Box.createHorizontalBox();
@@ -135,6 +151,13 @@ public class PresenceFrame implements ActionListener {
             long diff = leavingTime.getTime()-presenceTime.getTime();
             long hours = diff/(1000*60*60);
             long minutes = (diff-hours*(1000*60*60))/(1000*60);
+            hours = hours+workHours;
+            minutes = minutes+workMinutes;
+            if (minutes>=60){
+                minutes = minutes-60;
+                hours = hours+1;
+            }
+
             Object[] options ={ "はい", "いいえ" };
             int option = JOptionPane.showOptionDialog(null,
                     "退勤時刻:　"+formatTime.format(leavingTime)+"\n今日実働時間:　"+hours+"時間"+minutes+"分\n退勤の打刻はよろしいでしょうか",
@@ -153,11 +176,11 @@ public class PresenceFrame implements ActionListener {
     void tray() {
         tray = SystemTray.getSystemTray(); // 获得本操作系统托盘的实例
         PopupMenu pop = new PopupMenu(); // 构造一个右键弹出式菜单
-        MenuItem show = new MenuItem("show");
-        MenuItem exit = new MenuItem("exit");
+        MenuItem show = new MenuItem("開く");
+
         pop.add(show);
-        pop.add(exit);
-        Image image = Toolkit.getDefaultToolkit().getImage("../model/spe06.png");
+
+        Image image = Toolkit.getDefaultToolkit().getImage("src/com/kh/twksproject/model/spe06.png");
         trayIcon = new TrayIcon(image, "twks", pop);
         trayIcon.setImageAutoSize(true);
         /**
@@ -184,15 +207,6 @@ public class PresenceFrame implements ActionListener {
                 presenceFrame.toFront();
             }
         });
-
-        exit.addActionListener(new ActionListener() { // 点击“退出演示”菜单后退出程序
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0); // 退出程序
-            }
-        });
-
-
     }
 
 

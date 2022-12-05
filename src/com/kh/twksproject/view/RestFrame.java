@@ -23,11 +23,15 @@ public class RestFrame extends JPanel implements ActionListener {
     private static final int HEIGHT = 250;
 
     private long countMis, countSec, countMin, countHour;
-    private DecimalFormat textFormat = new DecimalFormat("00");
+    private final DecimalFormat textFormat = new DecimalFormat("00");
     Timer timer = new Timer(10, this);
-
+    long workHours;
+    long workMinutes;
 
     public RestFrame(long hours, long minutes) {
+        workHours = hours;
+        workMinutes = minutes;
+
         timer.start();
         restFrame.setSize(WIDTH, HEIGHT);
         restFrame.setLocationRelativeTo(null);
@@ -63,11 +67,9 @@ public class RestFrame extends JPanel implements ActionListener {
         restLabelBox.add(restLabel);
 
         Box workTimeBox = Box.createHorizontalBox();
-        //workTimeLabel.setText("今日実働時間:　2時間30分");
         workTimeBox.add(workTimeLabel);
 
         Box restTimeBox = Box.createHorizontalBox();
-        //restTimeLabel.setText("今までの休憩時間：1時05分");
         restTimeBox.add(restTimeLabel);
 
         Box restEndBtnBox = Box.createHorizontalBox();
@@ -98,7 +100,7 @@ public class RestFrame extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource()==restEndBtn){
             restFrame.dispose();
-            new PresenceFrame();
+            new PresenceFrame(workHours,workMinutes);
         }else {
             countMis++;
             if (countMis >= 99) {

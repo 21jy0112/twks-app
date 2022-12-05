@@ -37,7 +37,7 @@ public class LoginFrame implements ActionListener {
         titleLabel.setPreferredSize(new Dimension(100, 50));
         titleBox.add(titleLabel);
 
-        Box mailBox = Box.createHorizontalBox();//mailadress
+        Box mailBox = Box.createHorizontalBox();//mail address
         mailLabel.setPreferredSize(new Dimension(100, 20));
         mailBox.add(mailLabel);
         mailAddress.setPreferredSize(new Dimension(150, 20));

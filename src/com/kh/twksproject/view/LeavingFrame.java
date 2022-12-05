@@ -42,9 +42,9 @@ public class LeavingFrame  implements ActionListener {
         endBtnBox.add(endBtn);
         
         Box leavingBox = Box.createVerticalBox();
-        Component vStrut1 = Box.createVerticalStrut(20);
+        Component vStrut1 = Box.createVerticalStrut(35);
         Component vStrut2 = Box.createVerticalStrut(25);
-        Component vStrut3 = Box.createVerticalStrut(25);
+        Component vStrut3 = Box.createVerticalStrut(40);
         leavingBox.add(vStrut1);
         leavingBox.add(leavingLabelBox);
         leavingBox.add(vStrut2);
