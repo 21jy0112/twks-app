@@ -1,11 +1,17 @@
 package com.kh.twksproject.view;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PresenceFrame implements ActionListener {
 
@@ -29,20 +35,24 @@ public class PresenceFrame implements ActionListener {
     Date restTime = null;
     Date leavingTime = null;
 
-    long workHours=0;
-    long workMinutes=0;
+    long workHours = 0;
+    long workMinutes = 0;
+
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
 
     public PresenceFrame() {
         presenceFrame.setSize(WIDTH, HEIGHT);
         presenceFrame.setLocationRelativeTo(null);
         presenceFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        timeLabel.setText("出勤時刻　"+formatTime.format(presenceTime));
+        timeLabel.setText("出勤時刻　" + formatTime.format(presenceTime));
         init();
         trayAction();
         presenceFrame.setVisible(true);
+        doSshot();
+
     }
 
-    public PresenceFrame(long workHours,long workMinutes){
+    public PresenceFrame(long workHours, long workMinutes) {
         this.workHours = workHours;
         this.workMinutes = workMinutes;
         presenceFrame.setSize(WIDTH, HEIGHT);
@@ -52,9 +62,10 @@ public class PresenceFrame implements ActionListener {
         init();
         trayAction();
         presenceFrame.setVisible(true);
+        doSshot();
     }
 
-    void trayAction(){
+    void trayAction() {
         presenceFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -93,18 +104,18 @@ public class PresenceFrame implements ActionListener {
         Box timeBox = Box.createHorizontalBox();
 
         timeBox.add(timeLabel);
-        
+
         Box welcomeBox = Box.createHorizontalBox();
         nameLabel.setText("〇〇");
         welcomeBox.add(nameLabel);
         welcomeBox.add(welcomeLabel);
-        
+
         Box actionBtnBox = Box.createHorizontalBox();
         Component hStrut2 = Box.createHorizontalStrut(50);
         actionBtnBox.add(restBtn);
         actionBtnBox.add(hStrut2);
         actionBtnBox.add(leavingBtn);
-        
+
         Box minimizeBtnBox = Box.createHorizontalBox();
         Component hStrut3 = Box.createHorizontalStrut(300);
         minimizeBtnBox.add(hStrut3);
@@ -139,30 +150,32 @@ public class PresenceFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String btnStr = e.getActionCommand();
         if ("休憩".equals(btnStr)) {
+            service.shutdown();
             restTime = new Date();
-            long diff = restTime.getTime()-presenceTime.getTime();
-            long hours = diff/(1000*60*60);
-            long minutes = (diff-hours*(1000*60*60))/(1000*60);
+            long diff = restTime.getTime() - presenceTime.getTime();
+            long hours = diff / (1000 * 60 * 60);
+            long minutes = (diff - hours * (1000 * 60 * 60)) / (1000 * 60);
             presenceFrame.dispose();
-            new RestFrame(hours,minutes);
+            new RestFrame(hours, minutes);
         }
         if ("退勤".equals(btnStr)) {
+            service.shutdown();
             leavingTime = new Date();
-            long diff = leavingTime.getTime()-presenceTime.getTime();
-            long hours = diff/(1000*60*60);
-            long minutes = (diff-hours*(1000*60*60))/(1000*60);
-            hours = hours+workHours;
-            minutes = minutes+workMinutes;
-            if (minutes>=60){
-                minutes = minutes-60;
-                hours = hours+1;
+            long diff = leavingTime.getTime() - presenceTime.getTime();
+            long hours = diff / (1000 * 60 * 60);
+            long minutes = (diff - hours * (1000 * 60 * 60)) / (1000 * 60);
+            hours = hours + workHours;
+            minutes = minutes + workMinutes;
+            if (minutes >= 60) {
+                minutes = minutes - 60;
+                hours = hours + 1;
             }
 
-            Object[] options ={ "はい", "いいえ" };
+            Object[] options = {"はい", "いいえ"};
             int option = JOptionPane.showOptionDialog(null,
-                    "退勤時刻:　"+formatTime.format(leavingTime)+"\n今日実働時間:　"+hours+"時間"+minutes+"分\n退勤の打刻はよろしいでしょうか",
-                    "確認通知",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-            if (option==JOptionPane.YES_OPTION){
+                    "退勤時刻:　" + formatTime.format(leavingTime) + "\n今日実働時間:　" + hours + "時間" + minutes + "分\n退勤の打刻はよろしいでしょうか",
+                    "確認通知", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+            if (option == JOptionPane.YES_OPTION) {
                 presenceFrame.dispose();
                 new LeavingFrame();
             }
@@ -207,6 +220,43 @@ public class PresenceFrame implements ActionListener {
                 presenceFrame.toFront();
             }
         });
+    }
+
+    void doSshot() {
+
+        Runnable presenceNoticeTask = new Runnable() {
+            // run 方法内的内容就是定时任务的内容
+            @Override
+            public void run() {
+                try {
+                    //获取屏幕分辨率
+                    Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+                    //创建该分辨率的矩形对象
+                    Rectangle screenRect = new Rectangle(d);
+                    Robot robot = new Robot();
+
+
+                    BufferedImage bufferedImage = robot.createScreenCapture(screenRect);
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+                    String sshotName = sdf.format(new Date());
+                    //保存截图
+                    File file = new File("src/demo/screenshotPack/sshot_" + sshotName + ".png");
+
+                    ImageIO.write(bufferedImage, "png", file);
+
+                    //根据这个矩形截图
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        // 参数解释
+        // 1=此次任务、2=任务开始延迟时间、3=任务之间间隔时间、4=单位
+        service.scheduleWithFixedDelay(presenceNoticeTask, 5, 5, TimeUnit.SECONDS);
+
     }
 
 
