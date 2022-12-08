@@ -1,15 +1,13 @@
 package com.kh.twksproject.view;
 
+import com.kh.twksproject.model.TwksUtility;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledFuture;
 
 public class MainFrame implements ActionListener {
     private final JFrame mainFrame = new JFrame("TWKSアプリケーション");
@@ -20,8 +18,6 @@ public class MainFrame implements ActionListener {
 
     private static final int WIDTH = 400;
     private static final int HEIGHT = 250;
-
-    ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
 
     public MainFrame() {
         mainFrame.setSize(WIDTH, HEIGHT);
@@ -64,27 +60,22 @@ public class MainFrame implements ActionListener {
 
         presenceBtn.addActionListener(this);
 
-        Runnable presenceNoticeTask = new Runnable() {
-            // run 方法内的内容就是定时任务的内容
-            @Override
-            public void run() {
-                Object[] options ={ "はい"};
-                JOptionPane.showOptionDialog(null,
-                        "ログイン以降「出勤」の打刻がありません。\n「出勤」処理を行ってよろしいでしょうか？\n",
-                        "確認通知",JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
-            }
-        };
-
-        // 参数解释
-        // 1=此次任务、2=任务开始延迟时间、3=任务之间间隔时间、4=单位
-        service.scheduleWithFixedDelay(presenceNoticeTask, 5, 5, TimeUnit.MINUTES);
-
+        doNotification();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        service.shutdown();
+        stopNotification();
         mainFrame.dispose();
         new PresenceFrame();
+    }
+
+    void doNotification() {
+        TwksUtility.autoNotification();
+    }
+
+    void stopNotification() {
+        ScheduledFuture future = TwksUtility.getFuture();
+        future.cancel(true);
     }
 }

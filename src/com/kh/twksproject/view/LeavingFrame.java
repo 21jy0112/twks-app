@@ -12,7 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-public class LeavingFrame  implements ActionListener {
+public class LeavingFrame implements ActionListener {
     private final JFrame leavingFrame = new JFrame("TWKSアプリケーション");
     private final JLabel leavingLabel = new JLabel("退勤しました。");
     private final JLabel nameLabel = new JLabel();
@@ -21,6 +21,7 @@ public class LeavingFrame  implements ActionListener {
 
     private static final int WIDTH = 400;
     private static final int HEIGHT = 250;
+
     public LeavingFrame() {
         leavingFrame.setSize(WIDTH, HEIGHT);
         leavingFrame.setLocationRelativeTo(null);
@@ -28,19 +29,20 @@ public class LeavingFrame  implements ActionListener {
         init();
         leavingFrame.setVisible(true);
     }
-    public void init() {
-    	JPanel leavingPanel = new JPanel();
-    	Box leavingLabelBox = Box.createHorizontalBox(); //水平箱2
-    	leavingLabelBox.add(leavingLabel);
 
-    	Box welcomeBox = Box.createHorizontalBox();
+    public void init() {
+        JPanel leavingPanel = new JPanel();
+        Box leavingLabelBox = Box.createHorizontalBox();
+        leavingLabelBox.add(leavingLabel);
+
+        Box welcomeBox = Box.createHorizontalBox();
         nameLabel.setText("〇〇");
         welcomeBox.add(nameLabel);
         welcomeBox.add(welcomeLabel);
 
         Box endBtnBox = Box.createHorizontalBox();
         endBtnBox.add(endBtn);
-        
+
         Box leavingBox = Box.createVerticalBox();
         Component vStrut1 = Box.createVerticalStrut(35);
         Component vStrut2 = Box.createVerticalStrut(25);
@@ -51,15 +53,15 @@ public class LeavingFrame  implements ActionListener {
         leavingBox.add(welcomeBox);
         leavingBox.add(vStrut3);
         leavingBox.add(endBtnBox);
-        
+
         leavingPanel.add(leavingBox);
         leavingFrame.add(leavingPanel);
-        
+
         endBtn.addActionListener(this);
-        
     }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-    	leavingFrame.dispatchEvent(new WindowEvent(leavingFrame,WindowEvent.WINDOW_CLOSING) );
+        leavingFrame.dispatchEvent(new WindowEvent(leavingFrame, WindowEvent.WINDOW_CLOSING));
     }
 }

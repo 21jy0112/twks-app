@@ -43,14 +43,15 @@ public class RestFrame extends JPanel implements ActionListener {
 
 
     public void init() {
-        JPanel restPanel = new JPanel(){
+        JPanel restPanel = new JPanel() {
             @Override
             public void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                restTimeLabel.setText("今までの休憩時間:　"+textFormat.format(countHour) + "時間" + textFormat.format(countMin) +
+                restTimeLabel.setText("今までの休憩時間:　" + textFormat.format(countHour) + "時間" + textFormat.format(countMin) +
                         "分" + textFormat.format(countSec) + "秒");
                 repaint();
-            }};
+            }
+        };
         Box stateBox = Box.createHorizontalBox();
         Component hStrut1 = Box.createHorizontalStrut(300);
         Border blueLine = BorderFactory.createLineBorder(Color.blue);
@@ -98,10 +99,10 @@ public class RestFrame extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource()==restEndBtn){
+        if (e.getSource() == restEndBtn) {
             restFrame.dispose();
-            new PresenceFrame(workHours,workMinutes);
-        }else {
+            new PresenceFrame(workHours, workMinutes);
+        } else {
             countMis++;
             if (countMis >= 99) {
                 countSec++;

@@ -1,5 +1,7 @@
 package com.kh.twksproject.view;
 
+import com.kh.twksproject.model.TwksUtility;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -30,20 +32,20 @@ public class LoginFrame implements ActionListener {
     public void init() {
         JPanel loginPanel = new JPanel();
 
-        Box titleBox = Box.createHorizontalBox();//title
+        Box titleBox = Box.createHorizontalBox();
         Font titleFont = new Font(titleLabel.getFont().getName(), titleLabel.getFont().getStyle(), 24);
         titleLabel.setFont(titleFont);
         titleLabel.setForeground(Color.gray);
         titleLabel.setPreferredSize(new Dimension(100, 50));
         titleBox.add(titleLabel);
 
-        Box mailBox = Box.createHorizontalBox();//mail address
+        Box mailBox = Box.createHorizontalBox();
         mailLabel.setPreferredSize(new Dimension(100, 20));
         mailBox.add(mailLabel);
         mailAddress.setPreferredSize(new Dimension(150, 20));
         mailBox.add(mailAddress);
 
-        Box pwBox = Box.createHorizontalBox();//password
+        Box pwBox = Box.createHorizontalBox();
         passwdLabel.setPreferredSize(new Dimension(100, 20));
         pwBox.add(passwdLabel);
         password.setPreferredSize(new Dimension(150, 20));
@@ -53,7 +55,7 @@ public class LoginFrame implements ActionListener {
         errorLabel.setPreferredSize(new Dimension(300, 50));
         errorBox.add(errorLabel);
 
-        Box btnBox = Box.createHorizontalBox();//loginBtn
+        Box btnBox = Box.createHorizontalBox();
         btnBox.add(loginBtn);
 
         Box loginBox = Box.createVerticalBox();
@@ -74,7 +76,8 @@ public class LoginFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if ("123".equals(mailAddress.getText()) && "123".equals(String.valueOf(password.getPassword()))) {
+        boolean isCredentialValid = TwksUtility.checkCredentials(mailAddress.getText(), String.valueOf(password.getPassword()));
+        if (isCredentialValid) {
             loginFrame.dispose();
             new MainFrame();
         } else {

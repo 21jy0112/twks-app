@@ -1,17 +1,15 @@
 package com.kh.twksproject.view;
 
-import javax.imageio.ImageIO;
+import com.kh.twksproject.model.TwksUtility;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledFuture;
 
 public class PresenceFrame implements ActionListener {
 
@@ -27,7 +25,7 @@ public class PresenceFrame implements ActionListener {
     private static final int WIDTH = 400;
     private static final int HEIGHT = 250;
 
-    private TrayIcon trayIcon = null; // 托盘图标
+    private TrayIcon trayIcon = null;
     private SystemTray tray = null;
 
     SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm:ss");
@@ -38,8 +36,6 @@ public class PresenceFrame implements ActionListener {
     long workHours = 0;
     long workMinutes = 0;
 
-    ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
-
     public PresenceFrame() {
         presenceFrame.setSize(WIDTH, HEIGHT);
         presenceFrame.setLocationRelativeTo(null);
@@ -48,6 +44,7 @@ public class PresenceFrame implements ActionListener {
         init();
         trayAction();
         presenceFrame.setVisible(true);
+        doFolder();
         doSshot();
 
     }
@@ -62,6 +59,7 @@ public class PresenceFrame implements ActionListener {
         init();
         trayAction();
         presenceFrame.setVisible(true);
+        doFolder();
         doSshot();
     }
 
@@ -74,13 +72,12 @@ public class PresenceFrame implements ActionListener {
                 } catch (AWTException e1) {
                     e1.printStackTrace();
                 }
-                //presenceFrame.setVisible(false);
             }
 
             @Override
             public void windowIconified(WindowEvent e) {
                 try {
-                    tray.add(trayIcon); // 将托盘图标添加到系统的托盘实例中
+                    tray.add(trayIcon);
                     presenceFrame.dispose();
                 } catch (AWTException ex) {
                     ex.printStackTrace();
@@ -148,9 +145,8 @@ public class PresenceFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        String btnStr = e.getActionCommand();
-        if ("休憩".equals(btnStr)) {
-            service.shutdown();
+        if (e.getSource() == restBtn) {
+            stopSshot();
             restTime = new Date();
             long diff = restTime.getTime() - presenceTime.getTime();
             long hours = diff / (1000 * 60 * 60);
@@ -158,8 +154,8 @@ public class PresenceFrame implements ActionListener {
             presenceFrame.dispose();
             new RestFrame(hours, minutes);
         }
-        if ("退勤".equals(btnStr)) {
-            service.shutdown();
+        if (e.getSource() == leavingBtn) {
+            stopSshot();
             leavingTime = new Date();
             long diff = leavingTime.getTime() - presenceTime.getTime();
             long hours = diff / (1000 * 60 * 60);
@@ -178,17 +174,19 @@ public class PresenceFrame implements ActionListener {
             if (option == JOptionPane.YES_OPTION) {
                 presenceFrame.dispose();
                 new LeavingFrame();
+                doZip();
+                doDelete();
             }
 
         }
-        if ("非表示".equals(btnStr)) {
+        if (e.getSource() == minimizeBtn) {
             presenceFrame.setExtendedState(JFrame.ICONIFIED);
         }
     }
 
     void tray() {
-        tray = SystemTray.getSystemTray(); // 获得本操作系统托盘的实例
-        PopupMenu pop = new PopupMenu(); // 构造一个右键弹出式菜单
+        tray = SystemTray.getSystemTray();
+        PopupMenu pop = new PopupMenu();
         MenuItem show = new MenuItem("開く");
 
         pop.add(show);
@@ -196,14 +194,12 @@ public class PresenceFrame implements ActionListener {
         Image image = Toolkit.getDefaultToolkit().getImage("src/com/kh/twksproject/model/spe06.png");
         trayIcon = new TrayIcon(image, "twks", pop);
         trayIcon.setImageAutoSize(true);
-        /**
-         * 添加鼠标监听器，当鼠标在托盘图标上双击时，默认显示窗口
-         */
+
         trayIcon.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) { // 鼠标双击
-                    tray.remove(trayIcon); // 从系统的托盘实例中移除托盘图标
+                if (e.getClickCount() == 2) {
+                    tray.remove(trayIcon);
                     presenceFrame.setExtendedState(JFrame.NORMAL);
                     presenceFrame.setVisible(true); // 显示窗口
                     presenceFrame.toFront();
@@ -211,52 +207,44 @@ public class PresenceFrame implements ActionListener {
             }
         });
 
-        show.addActionListener(new ActionListener() { // 点击“显示窗口”菜单后将窗口显示出来
+        show.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tray.remove(trayIcon); // 从系统的托盘实例中移除托盘图标
+                tray.remove(trayIcon);
                 presenceFrame.setExtendedState(JFrame.NORMAL);
-                presenceFrame.setVisible(true); // 显示窗口
+                presenceFrame.setVisible(true);
                 presenceFrame.toFront();
             }
         });
     }
 
     void doSshot() {
+        TwksUtility.autoScreenshot();
+    }
 
-        Runnable presenceNoticeTask = new Runnable() {
-            // run 方法内的内容就是定时任务的内容
-            @Override
-            public void run() {
-                try {
-                    //获取屏幕分辨率
-                    Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-                    //创建该分辨率的矩形对象
-                    Rectangle screenRect = new Rectangle(d);
-                    Robot robot = new Robot();
+    void doFolder() {
+        TwksUtility.createFolder();
+    }
 
+    void stopSshot() {
+        ScheduledFuture future = TwksUtility.getFuture();
+        future.cancel(true);
+    }
 
-                    BufferedImage bufferedImage = robot.createScreenCapture(screenRect);
+    void doZip() {
+        TwksUtility.zipFiles();
+    }
 
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-                    String sshotName = sdf.format(new Date());
-                    //保存截图
-                    File file = new File("src/demo/screenshotPack/sshot_" + sshotName + ".png");
+    void doDelete() {
+        SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
+        String sshotDay = sshotDayFormat.format(new Date());
+        String filePath = "src/demo/screenshotPack/sshot" + sshotDay;
 
-                    ImageIO.write(bufferedImage, "png", file);
+        File folder = new File(filePath);
 
-                    //根据这个矩形截图
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        // 参数解释
-        // 1=此次任务、2=任务开始延迟时间、3=任务之间间隔时间、4=单位
-        service.scheduleWithFixedDelay(presenceNoticeTask, 5, 5, TimeUnit.SECONDS);
-
+        if (folder.exists()) {
+            TwksUtility.deleteFolder(folder);
+        }
     }
 
 
