@@ -5,12 +5,15 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,154 +27,245 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.JOptionPane;
 
 public class TwksUtility {
-    private static ScheduledFuture future;
-    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(2);
+	private static ScheduledFuture future;
+	private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(10);
 
-    public static void deleteFolder(File folder) {
-        // 获取文件夹下的所有文件
-        File[] files = folder.listFiles();
+	private static TwksNativeHook monitorInstance;
+	private static String path = "src/demo/motionsPack/";
+	private static String filenameTemp;
 
-        // 如果文件夹不为空
-        if (files != null) {
-            // 遍历文件夹下的所有文件
-            for (File file : files) {
-                // 如果当前文件是文件夹
-                if (file.isDirectory()) {
-                    // 递归调用deleteFolder()方法，删除子文件夹
-                    deleteFolder(file);
-                } else {
-                    // 如果当前文件是普通文件，直接删除
-                    file.delete();
-                }
-            }
-        }
+	public static void deleteFolder(File folder) {
+		// 获取文件夹下的所有文件
+		File[] files = folder.listFiles();
 
-        // 删除空文件夹
-        folder.delete();
-    }
+		// 如果文件夹不为空
+		if (files != null) {
+			// 遍历文件夹下的所有文件
+			for (File file : files) {
+				// 如果当前文件是文件夹
+				if (file.isDirectory()) {
+					// 递归调用deleteFolder()方法，删除子文件夹
+					deleteFolder(file);
+				} else {
+					// 如果当前文件是普通文件，直接删除
+					file.delete();
+				}
+			}
+		}
 
-    public static void createFolder() {
-        SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
-        String sshotDay = sshotDayFormat.format(new Date());
-        String sshotFile = "sshot" + sshotDay;
-        String saveDir = "src/demo/screenshotPack/" + sshotFile;
-        Path path = Paths.get(saveDir);
-        Path tempPath = Paths.get("src/demo/screenshotPack/temp");
-        try {
-            // 使用 Files.createDirectories 创建该文件夹
-            Files.createDirectories(path);
-            Files.createDirectories(tempPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+		// 删除空文件夹
+		folder.delete();
+	}
 
-    public static void autoScreenshot() {
-        future = SCHEDULER.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                takeScreenshot();
-            }
-        }, 5, 5, TimeUnit.SECONDS);
-    }
+	public static void createFolder() {
+		SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
+		String sshotDay = sshotDayFormat.format(new Date());
+		String sshotFile = "sshot" + sshotDay;
+		String saveDir = "src/demo/screenshotPack/" + sshotFile;
+		Path path = Paths.get(saveDir);
+		Path tempPath = Paths.get("src/demo/screenshotPack/temp");
+		try {
+			// 使用 Files.createDirectories 创建该文件夹
+			Files.createDirectories(path);
+			Files.createDirectories(tempPath);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-    public static void takeScreenshot() {
-        try {
-            //获取屏幕分辨率
-            Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-            //创建该分辨率的矩形对象
-            Rectangle screenRect = new Rectangle(d);
-            Robot robot = new Robot();
+	public static void autoScreenshot() {
+		future = SCHEDULER.scheduleWithFixedDelay(new Runnable() {
+			@Override
+			public void run() {
+				takeScreenshot();
+			}
+		}, 5, 5, TimeUnit.SECONDS);
+	}
 
-            BufferedImage bufferedImage = robot.createScreenCapture(screenRect);
+	public static void takeScreenshot() {
+		try {
+			// 获取屏幕分辨率
+			Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+			// 创建该分辨率的矩形对象
+			Rectangle screenRect = new Rectangle(d);
+			Robot robot = new Robot();
 
-            SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
-            String sshotDay = sshotDayFormat.format(new Date());
-            String saveDir = "src/demo/screenshotPack/sshot" + sshotDay;
+			BufferedImage bufferedImage = robot.createScreenCapture(screenRect);
 
-            SimpleDateFormat sshotTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-            String sshotTime = sshotTimeFormat.format(new Date());
-            String sshotName = "/sshot_" + sshotTime;
-            //保存截图
-            File file = new File(saveDir + sshotName + ".png");
+			SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
+			String sshotDay = sshotDayFormat.format(new Date());
+			String saveDir = "src/demo/screenshotPack/sshot" + sshotDay;
 
-            ImageIO.write(bufferedImage, "png", file);
+			SimpleDateFormat sshotTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+			String sshotTime = sshotTimeFormat.format(new Date());
+			String sshotName = "/sshot_" + sshotTime;
+			// 保存截图
+			File file = new File(saveDir + sshotName + ".png");
 
-            //根据这个矩形截图
+			ImageIO.write(bufferedImage, "png", file);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+			// 根据这个矩形截图
 
-    public static void autoNotification() {
-        future = SCHEDULER.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                showNotification();
-            }
-        }, 5, 5, TimeUnit.SECONDS);
-    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-    public static void showNotification() {
-        Object[] options = {"はい"};
-        JOptionPane.showOptionDialog(null,
-                "ログイン以降「出勤」の打刻がありません。\n「出勤」処理を行ってよろしいでしょうか？\n",
-                "確認通知", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+	public static void autoNotification() {
+		future = SCHEDULER.scheduleWithFixedDelay(new Runnable() {
+			@Override
+			public void run() {
+				showNotification();
+			}
+		}, 5, 5, TimeUnit.SECONDS);
+	}
 
-    }
+	public static void showNotification() {
+		Object[] options = { "はい" };
+		JOptionPane.showOptionDialog(null, "ログイン以降「出勤」の打刻がありません。\n「出勤」処理を行ってよろしいでしょうか？\n", "確認通知",
+				JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 
-    public static ScheduledFuture getFuture() {
-        return future;
-    }
+	}
 
-    public static void zipFiles() {
+	public static ScheduledFuture getFuture() {
+		return future;
+	}
 
-        SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
-        String sshotDay = sshotDayFormat.format(new Date());
-        String zipFolder = "src/demo/screenshotPack/sshot" + sshotDay;
-        String zipFile = "src/demo/screenshotPack/temp/sshot" + sshotDay + ".zip";
+	public static void zipFiles() {
 
-        try {
+		SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
+		String sshotDay = sshotDayFormat.format(new Date());
+		String zipFolder = "src/demo/screenshotPack/sshot" + sshotDay;
+		String zipFile = "src/demo/screenshotPack/temp/sshot" + sshotDay + ".zip";
 
-            // 创建压缩文件的输出流
-            OutputStream os = new FileOutputStream(zipFile);
-            ZipOutputStream zos = new ZipOutputStream(os);
+		try {
 
-            // 遍历要压缩的文件夹
-            File dir = new File(zipFolder);
-            for (File file : dir.listFiles()) {
-                // 读取文件的输入流
-                InputStream is = new FileInputStream(file);
+			// 创建压缩文件的输出流
+			OutputStream os = new FileOutputStream(zipFile);
+			ZipOutputStream zos = new ZipOutputStream(os);
 
-                // 创建压缩条目，并添加到压缩文件中
-                ZipEntry entry = new ZipEntry(file.getName());
-                zos.putNextEntry(entry);
+			// 遍历要压缩的文件夹
+			File dir = new File(zipFolder);
+			for (File file : dir.listFiles()) {
+				// 读取文件的输入流
+				InputStream is = new FileInputStream(file);
 
-                // 读取文件的输入流，并写入压缩文件的输出流
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = is.read(buffer)) > 0) {
-                    zos.write(buffer, 0, len);
-                }
+				// 创建压缩条目，并添加到压缩文件中
+				ZipEntry entry = new ZipEntry(file.getName());
+				zos.putNextEntry(entry);
 
-                // 关闭压缩条目，结束压缩
-                zos.closeEntry();
-                is.close();
-            }
+				// 读取文件的输入流，并写入压缩文件的输出流
+				byte[] buffer = new byte[1024];
+				int len;
+				while ((len = is.read(buffer)) > 0) {
+					zos.write(buffer, 0, len);
+				}
 
-            // 关闭压缩文件的输出流，结束压缩
-            zos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+				// 关闭压缩条目，结束压缩
+				zos.closeEntry();
+				is.close();
+			}
 
-    public static boolean checkCredentials(String username, String password) {
-        return "123".equals(username) && "123".equals(password);
-    }
+			// 关闭压缩文件的输出流，结束压缩
+			zos.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static boolean checkCredentials(String username, String password) {
+		return "123".equals(username) && "123".equals(password);
+	}
+
+	public static boolean doCreatTxtFile(String name) throws IOException {
+		boolean flag = false;
+		filenameTemp = path + name + ".txt";
+		File filename = new File(filenameTemp);
+		if (!filename.exists()) {
+			filename.createNewFile();
+			flag = true;
+		}
+		return flag;
+	}
+
+	public static boolean doWriteTxtFile(String newStr) throws IOException {
+		// 先读取原有文件内容，然后进行写入操作
+		boolean flag = false;
+		String filein = newStr + "";
+		String temp = "";
+
+		FileInputStream fis = null;
+		InputStreamReader isr = null;
+		BufferedReader br = null;
+
+		FileOutputStream fos = null;
+		PrintWriter pw = null;
+		try {
+			// 文件路径
+			File file = new File(filenameTemp);
+			// 将文件读入输入流
+			fis = new FileInputStream(file);
+			isr = new InputStreamReader(fis);
+			br = new BufferedReader(isr);
+			StringBuffer buf = new StringBuffer();
+
+			// 保存该文件原有的内容
+			for (int j = 1; (temp = br.readLine()) != null; j++) {
+				buf = buf.append(temp);
+				// System.getProperty("line.separator")
+				// 行与行之间的分隔符 相当于“”
+				// buf = buf.append(System.getProperty("line.separator"));
+				buf = buf.append(",");
+			}
+			buf.append(filein);
+
+			fos = new FileOutputStream(file);
+			pw = new PrintWriter(fos);
+			pw.write(buf.toString().toCharArray());
+			pw.flush();
+			flag = true;
+		} catch (IOException e1) {
+			// TODO 自动生成 catch 块
+			throw e1;
+		} finally {
+			if (pw != null) {
+				pw.close();
+			}
+			if (fos != null) {
+				fos.close();
+			}
+			if (br != null) {
+				br.close();
+			}
+			if (isr != null) {
+				isr.close();
+			}
+			if (fis != null) {
+				fis.close();
+			}
+		}
+		return flag;
+	}
+
+	public static void startRecord() {
+		monitorInstance = new TwksNativeHook();
+		TwksNativeHookUtility.startListening(monitorInstance);
+		Runnable recordTask = new Runnable() {
+
+			@Override
+			public void run() {
+				monitorInstance.doRecord();
+				monitorInstance.recordReturnToZero();
+			}
+		};
+		future = SCHEDULER.scheduleWithFixedDelay(recordTask, 0, 2, TimeUnit.SECONDS);
+	}
+	
+	public static void stopReecord() {
+		TwksNativeHookUtility.stopListening(monitorInstance);
+	}
 
 }
