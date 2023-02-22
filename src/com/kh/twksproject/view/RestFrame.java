@@ -1,5 +1,7 @@
 package com.kh.twksproject.view;
 
+import com.kh.twksproject.model.TwksFileAuthUtility;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,7 +11,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 
 public class RestFrame extends JPanel implements ActionListener {
-
+    private final String username;
     private final JFrame restFrame = new JFrame("TWKSアプリケーション");
     private final JLabel stateLabel = new JLabel("休憩中");
     private final JLabel nameLabel = new JLabel();
@@ -29,6 +31,8 @@ public class RestFrame extends JPanel implements ActionListener {
     long workMinutes;
 
     public RestFrame(long hours, long minutes) {
+        this.username = TwksFileAuthUtility.getUsername();
+
         workHours = hours;
         workMinutes = minutes;
 
@@ -60,7 +64,7 @@ public class RestFrame extends JPanel implements ActionListener {
         stateBox.add(stateLabel);
 
         Box welcomeBox = Box.createHorizontalBox();
-        nameLabel.setText("〇〇");
+        nameLabel.setText(username);
         welcomeBox.add(nameLabel);
         welcomeBox.add(welcomeLabel);
 

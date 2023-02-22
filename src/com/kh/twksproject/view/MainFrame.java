@@ -1,5 +1,6 @@
 package com.kh.twksproject.view;
 
+import com.kh.twksproject.model.TwksFileAuthUtility;
 import com.kh.twksproject.model.TwksUtility;
 
 import javax.swing.*;
@@ -16,10 +17,14 @@ public class MainFrame implements ActionListener {
     private final JLabel welcomeLabel = new JLabel("さん　ようこそ");
     private final JButton presenceBtn = new JButton("出勤");
 
+    private final String username;
+
     private static final int WIDTH = 400;
     private static final int HEIGHT = 250;
 
     public MainFrame() {
+        this.username = TwksFileAuthUtility.getUsername();
+
         mainFrame.setSize(WIDTH, HEIGHT);
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -37,7 +42,7 @@ public class MainFrame implements ActionListener {
         stateBox.add(stateLabel);
 
         Box welcomeBox = Box.createHorizontalBox();
-        nameLabel.setText("〇〇");
+        nameLabel.setText(username);
         nameLabel.setFont(new Font(Font.DIALOG, Font.BOLD, 20));
         welcomeLabel.setFont(new Font(Font.DIALOG, Font.BOLD, 20));
         welcomeBox.add(nameLabel);

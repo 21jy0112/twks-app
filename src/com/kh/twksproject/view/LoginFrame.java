@@ -1,5 +1,6 @@
 package com.kh.twksproject.view;
 
+import com.kh.twksproject.model.TwksFileAuthUtility;
 import com.kh.twksproject.model.TwksUtility;
 
 import javax.swing.*;
@@ -7,6 +8,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.MalformedURLException;
 
 public class LoginFrame implements ActionListener {
     private final JFrame loginFrame = new JFrame("TWKSアプリケーション");
@@ -76,8 +78,15 @@ public class LoginFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        boolean isCredentialValid = TwksUtility.checkCredentials(mailAddress.getText(), String.valueOf(password.getPassword()));
+        //boolean isCredentialValid = TwksUtility.checkCredentials(mailAddress.getText(), String.valueOf(password.getPassword()));
+        boolean isCredentialValid = false;
+        try {
+            isCredentialValid = TwksFileAuthUtility.validateEmailPassword(mailAddress.getText(), String.valueOf(password.getPassword()));
+        } catch (MalformedURLException ex) {
+            throw new RuntimeException(ex);
+        }
         if (isCredentialValid) {
+            TwksFileAuthUtility.searchNameByEmail(mailAddress.getText());
             loginFrame.dispose();
             new MainFrame();
         } else {

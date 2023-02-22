@@ -1,17 +1,40 @@
 package com.kh.twksproject.view;
 
-import com.kh.twksproject.model.TwksUtility;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTException;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+import javax.swing.border.Border;
+
+import com.kh.twksproject.model.TwksFileAuthUtility;
+import com.kh.twksproject.model.TwksUtility;
+
 public class PresenceFrame implements ActionListener {
+    private final String username;
 
     private final JFrame presenceFrame = new JFrame("TWKSアプリケーション");
     private final JLabel stateLabel = new JLabel("出勤中");
@@ -37,6 +60,8 @@ public class PresenceFrame implements ActionListener {
     long workMinutes = 0;
 
     public PresenceFrame() {
+        this.username = TwksFileAuthUtility.getUsername();
+
         presenceFrame.setSize(WIDTH, HEIGHT);
         presenceFrame.setLocationRelativeTo(null);
         presenceFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -46,10 +71,12 @@ public class PresenceFrame implements ActionListener {
         presenceFrame.setVisible(true);
         doFolder();
         doSshot();
-
+        doRecording();
     }
 
     public PresenceFrame(long workHours, long workMinutes) {
+        this.username = TwksFileAuthUtility.getUsername();
+
         this.workHours = workHours;
         this.workMinutes = workMinutes;
         presenceFrame.setSize(WIDTH, HEIGHT);
@@ -61,6 +88,7 @@ public class PresenceFrame implements ActionListener {
         presenceFrame.setVisible(true);
         doFolder();
         doSshot();
+        doRecording();
     }
 
     void trayAction() {
@@ -103,7 +131,7 @@ public class PresenceFrame implements ActionListener {
         timeBox.add(timeLabel);
 
         Box welcomeBox = Box.createHorizontalBox();
-        nameLabel.setText("〇〇");
+        nameLabel.setText(username);
         welcomeBox.add(nameLabel);
         welcomeBox.add(welcomeLabel);
 
@@ -146,6 +174,7 @@ public class PresenceFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == restBtn) {
+            stopRecording();
             stopSshot();
             restTime = new Date();
             long diff = restTime.getTime() - presenceTime.getTime();
@@ -155,7 +184,6 @@ public class PresenceFrame implements ActionListener {
             new RestFrame(hours, minutes);
         }
         if (e.getSource() == leavingBtn) {
-            stopSshot();
             leavingTime = new Date();
             long diff = leavingTime.getTime() - presenceTime.getTime();
             long hours = diff / (1000 * 60 * 60);
@@ -172,6 +200,8 @@ public class PresenceFrame implements ActionListener {
                     "退勤時刻:　" + formatTime.format(leavingTime) + "\n今日実働時間:　" + hours + "時間" + minutes + "分\n退勤の打刻はよろしいでしょうか",
                     "確認通知", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (option == JOptionPane.YES_OPTION) {
+                stopRecording();
+                stopSshot();
                 presenceFrame.dispose();
                 new LeavingFrame();
                 doZip();
@@ -229,6 +259,7 @@ public class PresenceFrame implements ActionListener {
     void stopSshot() {
         ScheduledFuture future = TwksUtility.getFuture();
         future.cancel(true);
+        //List<Runnable> tasks=TwksUtility.getScheduler().shutdownNow();
     }
 
     void doZip() {
@@ -247,5 +278,14 @@ public class PresenceFrame implements ActionListener {
         }
     }
 
+    void doRecording() {
+        TwksUtility.startRecord();
+    }
+
+    void stopRecording() {
+        TwksUtility.stopReecord();
+        ScheduledFuture future = TwksUtility.getFutureForRecord();
+        future.cancel(true);
+    }
 
 }
