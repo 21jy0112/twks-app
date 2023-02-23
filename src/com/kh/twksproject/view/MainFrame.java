@@ -80,7 +80,6 @@ public class MainFrame implements ActionListener {
     }
 
     void stopNotification() {
-        ScheduledFuture future = TwksUtility.getFuture();
-        future.cancel(true);
+        TwksUtility.stopNotify();
     }
 }

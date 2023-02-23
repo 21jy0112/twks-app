@@ -1,9 +1,6 @@
 package com.kh.twksproject.model;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -11,11 +8,14 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class TwksFileAuthUtility {
-    private static String username;
+    private static String username = null;
+    private static String empId = null;
+
+    private static final String BOUNDARY = "------------------------" + Long.toHexString(System.currentTimeMillis());
 
     public static boolean validateEmailPassword(String email, String password) throws MalformedURLException {
         int responseCode = 0;
-        String url = "***************************************";
+        String url = "http://localhost:8080/twks-backend/TesePass";
         URL obj = null;
         try {
             obj = new URL(url);
@@ -27,7 +27,7 @@ public class TwksFileAuthUtility {
             con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
 
             // 设置请求体
-            String urlParameters = "email=" + email + "&password=" + password+"&action=validate_password";
+            String urlParameters = "email=" + email + "&password=" + password + "&action=validate_password";
             con.setDoOutput(true);
             DataOutputStream wr = new DataOutputStream(con.getOutputStream());
             wr.writeBytes(urlParameters);
@@ -50,9 +50,9 @@ public class TwksFileAuthUtility {
 
     }
 
-    public static void searchNameByEmail(String email){
+    public static void searchNameByEmail(String email) {
         String name = null;
-        String url = "***************************************";
+        String url = "http://localhost:8080/twks-backend/TesePass";
         URL obj = null;
         try {
             obj = new URL(url);
@@ -64,7 +64,7 @@ public class TwksFileAuthUtility {
             con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
             // 设置请求体
-            String urlParameters = "email=" + email +"&action=get_username";
+            String urlParameters = "email=" + email + "&action=get_username_empId";
             byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
             con.setRequestProperty("Content-Length", String.valueOf(postData.length));
 
@@ -81,14 +81,120 @@ public class TwksFileAuthUtility {
                 while ((line = in.readLine()) != null) {
                     content.append(line);
                 }
-                username = content.toString();
+                String[] result = content.toString().split(",");
+                if (result.length == 2) {
+                    username = result[0];
+                    System.out.println(result[0]);
+                    empId = result[1];
+                    System.out.println(result[1]);
+                    // ...
+                } else {
+                    System.out.println(result[0]);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static String getUsername(){
+    public static String getUsername() {
         return username;
+    }
+
+    public static String getEmpId() {
+        return empId;
+    }
+
+    public static void uploadFilesToServlet() {
+        String url = "http://localhost:8080/twks-backend/TesePass";
+        String charset = "UTF-8";
+        File motionFolder = new File("src/demo/motionsPack");
+        File screenshotFolder = new File("src/demo/screenshotPack");
+
+        String action = "upload_file_screenshot"; // 添加 action 参数
+
+        URL uploadUrl = null;
+        try {
+            uploadUrl = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) uploadUrl.openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
+
+            OutputStream outputStream = conn.getOutputStream();
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+
+            // 添加 action 参数
+            writer.append("--" + BOUNDARY).append("\r\n");
+            writer.append("Content-Disposition: form-data; name=\"action\"").append("\r\n");
+            writer.append("\r\n");
+            writer.append(action).append("\r\n");
+            writer.flush();
+
+
+
+            // 添加motion文件夹下的所有txt文件
+            File[] motionFiles = motionFolder.listFiles();
+            for (File motionFile : motionFiles) {
+                if (motionFile.isFile() && motionFile.getName().endsWith(".txt")) {
+                    String fileName = motionFile.getName();
+                    writer.append("--" + BOUNDARY).append("\r\n");
+                    writer.append("Content-Disposition: form-data; name=\"motion_file\"; filename=\"" + fileName + "\"").append("\r\n");
+                    writer.append("Content-Type: text/plain; charset=" + charset).append("\r\n\r\n");
+                    writer.flush();
+
+                    FileInputStream inputStream = new FileInputStream(motionFile);
+                    byte[] buffer = new byte[4096];
+                    int bytesRead = -1;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    outputStream.flush();
+                    inputStream.close();
+
+                    writer.append("\r\n");
+                    writer.flush();
+                }
+            }
+
+            // 添加screenshot文件夹下的所有zip文件
+            File[] screenshotFiles = screenshotFolder.listFiles();
+            for (File screenshotFile : screenshotFiles) {
+                if (screenshotFile.isFile() && screenshotFile.getName().endsWith(".zip")) {
+                    String fileName = screenshotFile.getName();
+                    writer.append("--" + BOUNDARY).append("\r\n");
+                    writer.append("Content-Disposition: form-data; name=\"screenshot_file\"; filename=\"" + fileName + "\"").append("\r\n");
+                    writer.append("Content-Type: application/zip; charset=" + charset).append("\r\n\r\n");
+                    writer.flush();
+
+                    FileInputStream inputStream = new FileInputStream(screenshotFile);
+                    byte[] buffer = new byte[4096];
+                    int bytesRead = -1;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    outputStream.flush();
+                    inputStream.close();
+
+                    writer.append("\r\n");
+                    writer.flush();
+                }
+            }
+
+            // 添加结束边界符
+            writer.append("--" + BOUNDARY + "--").append("\r\n");
+            writer.close();
+        } catch (ProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("upload_file_screenshot");
     }
 }

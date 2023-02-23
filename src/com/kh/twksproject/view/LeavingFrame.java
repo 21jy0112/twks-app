@@ -1,5 +1,7 @@
 package com.kh.twksproject.view;
 
+import com.kh.twksproject.model.TwksFileAuthUtility;
+
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,6 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 public class LeavingFrame implements ActionListener {
+    private final String username;
     private final JFrame leavingFrame = new JFrame("TWKSアプリケーション");
     private final JLabel leavingLabel = new JLabel("退勤しました。");
     private final JLabel nameLabel = new JLabel();
@@ -23,6 +26,8 @@ public class LeavingFrame implements ActionListener {
     private static final int HEIGHT = 250;
 
     public LeavingFrame() {
+        this.username = TwksFileAuthUtility.getUsername();
+
         leavingFrame.setSize(WIDTH, HEIGHT);
         leavingFrame.setLocationRelativeTo(null);
         leavingFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -36,7 +41,7 @@ public class LeavingFrame implements ActionListener {
         leavingLabelBox.add(leavingLabel);
 
         Box welcomeBox = Box.createHorizontalBox();
-        nameLabel.setText("〇〇");
+        nameLabel.setText(username);
         welcomeBox.add(nameLabel);
         welcomeBox.add(welcomeLabel);
 

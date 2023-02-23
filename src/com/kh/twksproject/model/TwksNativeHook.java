@@ -84,7 +84,7 @@ public class TwksNativeHook implements NativeKeyListener, NativeMouseInputListen
 
     public void appendDisplayKeyClick(final String output) {
         try {
-            TwksUtility.doCreatTxtFile("KeyClick"+day);
+            TwksUtility.doCreatTxtFile(TwksFileAuthUtility.getEmpId()+"_MotionData_"+day);
             TwksUtility.doWriteTxtFile(output);
         } catch (IOException e) {
             // TODO 自動生成された catch ブロック
@@ -94,7 +94,7 @@ public class TwksNativeHook implements NativeKeyListener, NativeMouseInputListen
 
     public void appendDisplayMouseClick(final String output) {
         try {
-            TwksUtility.doCreatTxtFile("MouseClick"+day);
+            TwksUtility.doCreatTxtFile(TwksFileAuthUtility.getEmpId()+"_MotionData_"+day);
             TwksUtility.doWriteTxtFile(output);
         } catch (IOException e) {
             // TODO 自動生成された catch ブロック
@@ -104,7 +104,7 @@ public class TwksNativeHook implements NativeKeyListener, NativeMouseInputListen
 
     public void appendDisplayMouseMove(final String output) {
         try {
-            TwksUtility.doCreatTxtFile("MouseMove"+day);
+            TwksUtility.doCreatTxtFile(TwksFileAuthUtility.getEmpId()+"_MotionData_"+day);
             TwksUtility.doWriteTxtFile(output);
         } catch (IOException e) {
             // TODO 自動生成された catch ブロック
@@ -113,9 +113,12 @@ public class TwksNativeHook implements NativeKeyListener, NativeMouseInputListen
     }
 
     public void doRecord() {
-        appendDisplayMouseMove(String.valueOf(getMouseMove()));
-        appendDisplayMouseClick(String.valueOf(getMouseClick()));
-        appendDisplayKeyClick(String.valueOf(getKeyClick()));
+        SimpleDateFormat dateTime = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timestamp = dateTime.format(new Date());
+
+        appendDisplayMouseMove(timestamp+","+ getMouseMove()+",m");
+        appendDisplayMouseClick(timestamp+","+ getMouseClick()+",c" );
+        appendDisplayKeyClick(timestamp+","+ getKeyClick()+",k" );
     }
 
     public void recordReturnToZero() {

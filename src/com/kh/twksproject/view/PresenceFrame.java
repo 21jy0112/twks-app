@@ -206,6 +206,7 @@ public class PresenceFrame implements ActionListener {
                 new LeavingFrame();
                 doZip();
                 doDelete();
+                doUpLoad();
             }
 
         }
@@ -213,6 +214,8 @@ public class PresenceFrame implements ActionListener {
             presenceFrame.setExtendedState(JFrame.ICONIFIED);
         }
     }
+
+
 
     void tray() {
         tray = SystemTray.getSystemTray();
@@ -257,9 +260,7 @@ public class PresenceFrame implements ActionListener {
     }
 
     void stopSshot() {
-        ScheduledFuture future = TwksUtility.getFuture();
-        future.cancel(true);
-        //List<Runnable> tasks=TwksUtility.getScheduler().shutdownNow();
+        TwksUtility.stopScreenshot();
     }
 
     void doZip() {
@@ -269,7 +270,7 @@ public class PresenceFrame implements ActionListener {
     void doDelete() {
         SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
         String sshotDay = sshotDayFormat.format(new Date());
-        String filePath = "src/demo/screenshotPack/sshot" + sshotDay;
+        String filePath = "src/demo/screenshotPack/" +TwksFileAuthUtility.getEmpId()+"_" + sshotDay;
 
         File folder = new File(filePath);
 
@@ -284,8 +285,10 @@ public class PresenceFrame implements ActionListener {
 
     void stopRecording() {
         TwksUtility.stopReecord();
-        ScheduledFuture future = TwksUtility.getFutureForRecord();
-        future.cancel(true);
     }
 
+    private void doUpLoad() {
+        TwksFileAuthUtility.uploadFilesToServlet();
+        System.out.println(TwksFileAuthUtility.getEmpId()+" "+TwksFileAuthUtility.getUsername());
+    }
 }

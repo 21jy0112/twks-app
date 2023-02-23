@@ -31,6 +31,8 @@ import javax.swing.JOptionPane;
 
 public class TwksUtility {
     private static ScheduledFuture future;
+
+    private static ScheduledFuture futureForScreenshot;
     private static ScheduledFuture futureForRecord;
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(10);
 
@@ -68,26 +70,34 @@ public class TwksUtility {
     public static void createFolder() {
         SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
         String sshotDay = sshotDayFormat.format(new Date());
-        String sshotFile = "sshot" + sshotDay;
+        String sshotFile = TwksFileAuthUtility.getEmpId()+"_" + sshotDay;
         String saveDir = "src/demo/screenshotPack/" + sshotFile;
         Path path = Paths.get(saveDir);
-        Path tempPath = Paths.get("src/demo/screenshotPack/temp");
+        //Path tempPath = Paths.get("src/demo/screenshotPack/temp");
         try {
             // 使用 Files.createDirectories 创建该文件夹
             Files.createDirectories(path);
-            Files.createDirectories(tempPath);
+            //Files.createDirectories(tempPath);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void autoScreenshot() {
-        future = SCHEDULER.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                takeScreenshot();
-            }
-        }, 5, 5, TimeUnit.SECONDS);
+        if (futureForScreenshot==null||futureForScreenshot.isCancelled()){
+            futureForScreenshot = SCHEDULER.scheduleWithFixedDelay(new Runnable() {
+                @Override
+                public void run() {
+                    takeScreenshot();
+                }
+            }, 5, 5, TimeUnit.SECONDS);
+        }
+    }
+
+    public static void stopScreenshot() {
+        if (futureForScreenshot != null && !futureForScreenshot.isCancelled()) {
+            futureForScreenshot.cancel(true);
+        }
     }
 
     public static void takeScreenshot() {
@@ -102,11 +112,11 @@ public class TwksUtility {
 
             SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
             String sshotDay = sshotDayFormat.format(new Date());
-            String saveDir = "src/demo/screenshotPack/sshot" + sshotDay;
+            String saveDir = "src/demo/screenshotPack/" +TwksFileAuthUtility.getEmpId()+"_" + sshotDay;
 
             SimpleDateFormat sshotTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
             String sshotTime = sshotTimeFormat.format(new Date());
-            String sshotName = "/sshot_" + sshotTime;
+            String sshotName = "/"+TwksFileAuthUtility.getEmpId()+"_" + sshotTime;
             // 保存截图
             File file = new File(saveDir + sshotName + ".png");
 
@@ -139,6 +149,10 @@ public class TwksUtility {
         return future;
     }
 
+    public static ScheduledFuture getFutureForScreenshot() {
+        return futureForScreenshot;
+    }
+
     public static ScheduledFuture getFutureForRecord() {
         return futureForRecord;
     }
@@ -147,8 +161,8 @@ public class TwksUtility {
 
         SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
         String sshotDay = sshotDayFormat.format(new Date());
-        String zipFolder = "src/demo/screenshotPack/sshot" + sshotDay;
-        String zipFile = "src/demo/screenshotPack/temp/sshot" + sshotDay + ".zip";
+        String zipFolder = "src/demo/screenshotPack/"+TwksFileAuthUtility.getEmpId()+"_" + sshotDay;
+        String zipFile = "src/demo/screenshotPack/"+TwksFileAuthUtility.getEmpId()+"_" + sshotDay+ ".zip";
 
         try {
 
@@ -227,7 +241,7 @@ public class TwksUtility {
                 // System.getProperty("line.separator")
                 // 行与行之间的分隔符 相当于“”
                 // buf = buf.append(System.getProperty("line.separator"));
-                buf = buf.append(",");
+                buf = buf.append("\n");
             }
             buf.append(filein);
 
@@ -275,6 +289,15 @@ public class TwksUtility {
 
     public static void stopReecord() {
         TwksNativeHookUtility.stopListening(monitorInstance);
+        if (futureForRecord != null && !futureForRecord.isCancelled()) {
+            futureForRecord.cancel(true);
+        }
+    }
+
+    public static void stopNotify() {
+        if (future != null && !future.isCancelled()) {
+            future.cancel(true);
+        }
     }
 
 }
