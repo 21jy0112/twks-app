@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -292,14 +294,11 @@ public class PresenceFrame implements ActionListener {
         TwksUtility.stopRecord();
     }
 
-
     void doRecordStartTime(){
         SimpleDateFormat startTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String startTime = startTimeFormat.format(new Date());
         TwksFileAuthUtility.setStartTime(startTime);
     }
-
-
 
     private void doUpLoad() throws IOException {
         TwksFileAuthUtility.uploadFilesToServlet();
