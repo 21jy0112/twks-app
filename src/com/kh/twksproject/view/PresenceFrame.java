@@ -16,9 +16,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.ScheduledFuture;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -174,6 +174,7 @@ public class PresenceFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == restBtn) {
+            doRecordStartTime();
             stopRecording();
             stopSshot();
             restTime = new Date();
@@ -206,7 +207,11 @@ public class PresenceFrame implements ActionListener {
                 new LeavingFrame();
                 doZip();
                 doDelete();
-                doUpLoad();
+//                try {
+//                    doUpLoad();
+//                } catch (IOException ex) {
+//                    throw new RuntimeException(ex);
+//                }
             }
 
         }
@@ -284,10 +289,19 @@ public class PresenceFrame implements ActionListener {
     }
 
     void stopRecording() {
-        TwksUtility.stopReecord();
+        TwksUtility.stopRecord();
     }
 
-    private void doUpLoad() {
+
+    void doRecordStartTime(){
+        SimpleDateFormat startTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String startTime = startTimeFormat.format(new Date());
+        TwksFileAuthUtility.setStartTime(startTime);
+    }
+
+
+
+    private void doUpLoad() throws IOException {
         TwksFileAuthUtility.uploadFilesToServlet();
         System.out.println(TwksFileAuthUtility.getEmpId()+" "+TwksFileAuthUtility.getUsername());
     }

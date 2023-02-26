@@ -6,6 +6,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -104,6 +106,8 @@ public class RestFrame extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == restEndBtn) {
+            doRecordEndTime();
+            //doUploadRestTime();
             restFrame.dispose();
             new PresenceFrame(workHours, workMinutes);
         } else {
@@ -121,5 +125,15 @@ public class RestFrame extends JPanel implements ActionListener {
                 }
             }
         }
+    }
+
+    void doRecordEndTime(){
+        SimpleDateFormat endTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String endTime = endTimeFormat.format(new Date());
+        TwksFileAuthUtility.setEndTime(endTime);
+    }
+
+    void doUploadRestTime(){
+        TwksFileAuthUtility.uploadTimeToServlet();
     }
 }

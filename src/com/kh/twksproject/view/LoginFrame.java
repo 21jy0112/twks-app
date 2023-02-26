@@ -78,17 +78,17 @@ public class LoginFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        //boolean isCredentialValid = TwksUtility.checkCredentials(mailAddress.getText(), String.valueOf(password.getPassword()));
-        boolean isCredentialValid = false;
-        String usermail = mailAddress.getText();
-
-        try {
-            isCredentialValid = TwksFileAuthUtility.validateEmailPassword(mailAddress.getText(), String.valueOf(password.getPassword()));
-        } catch (MalformedURLException ex) {
-            throw new RuntimeException(ex);
-        }
+        boolean isCredentialValid = TwksUtility.checkCredentials(mailAddress.getText(), String.valueOf(password.getPassword()));
+//        boolean isCredentialValid = false;
+//        String usermail = mailAddress.getText();
+//
+//        try {
+//            isCredentialValid = TwksFileAuthUtility.validateEmailPassword(mailAddress.getText(), String.valueOf(password.getPassword()));
+//        } catch (MalformedURLException ex) {
+//            throw new RuntimeException(ex);
+//        }
         if (isCredentialValid) {
-            TwksFileAuthUtility.searchNameByEmail(usermail);
+            //TwksFileAuthUtility.searchNameByEmail(usermail);
             loginFrame.dispose();
             new MainFrame();
         } else {

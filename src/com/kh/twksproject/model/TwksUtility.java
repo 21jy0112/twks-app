@@ -1,9 +1,6 @@
 package com.kh.twksproject.model;
 
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,7 +31,9 @@ public class TwksUtility {
 
     private static ScheduledFuture futureForScreenshot;
     private static ScheduledFuture futureForRecord;
+
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(10);
+    private static final ScheduledExecutorService SCHEDULERforRecord = Executors.newScheduledThreadPool(10);
 
     private static TwksNativeHook monitorInstance;
     private static String path = "src/demo/motionsPack/";
@@ -104,11 +103,19 @@ public class TwksUtility {
         try {
             // 获取屏幕分辨率
             Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+            double screenWidth = d.getWidth();
+            double screenHeight = d.getHeight();
+            int targetWidth = (int) (screenWidth / 2.5);
+            int targetHeight = (int) (screenHeight / 2.5);
             // 创建该分辨率的矩形对象
             Rectangle screenRect = new Rectangle(d);
             Robot robot = new Robot();
-
             BufferedImage bufferedImage = robot.createScreenCapture(screenRect);
+            BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = resizedImage.createGraphics();
+            g.drawImage(bufferedImage, 0, 0, targetWidth, targetHeight, null);
+            g.dispose();
+            bufferedImage = resizedImage;
 
             SimpleDateFormat sshotDayFormat = new SimpleDateFormat("yyyyMMdd");
             String sshotDay = sshotDayFormat.format(new Date());
@@ -287,7 +294,7 @@ public class TwksUtility {
         futureForRecord = SCHEDULER.scheduleWithFixedDelay(recordTask, 0, 2, TimeUnit.SECONDS);
     }
 
-    public static void stopReecord() {
+    public static void stopRecord() {
         TwksNativeHookUtility.stopListening(monitorInstance);
         if (futureForRecord != null && !futureForRecord.isCancelled()) {
             futureForRecord.cancel(true);
